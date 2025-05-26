@@ -1,11 +1,11 @@
-function ChapterDetails({ chapter }) {
+function ChapterDetails({ chapter, onNext, isLast }) {
   if (!chapter) return null;
 
   return (
     <div
       style={{
         position: "absolute",
-        top: "320px", // adjust based on viewer height
+        top: "320px",
         left: "10px",
         width: "300px",
         backgroundColor: "#ffffff",
@@ -32,6 +32,25 @@ function ChapterDetails({ chapter }) {
             objectFit: "cover",
           }}
         />
+      )}
+
+      {!isLast && (
+        <button
+          onClick={onNext}
+          style={{
+            marginTop: "14px",
+            width: "100%",
+            padding: "10px",
+            backgroundColor: "#1d72b8",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          Next Chapter →
+        </button>
       )}
     </div>
   );

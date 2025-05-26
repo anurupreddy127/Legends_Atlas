@@ -27,8 +27,39 @@ const center = {
 //   { name: "Lanka (Nuwara Eliya)", lat: 6.9497, lng: 80.7891 },
 // ];
 
+function animateMapTo(map, targetCenter, targetZoom, duration = 1000) {
+  const start = performance.now();
+  const initialCenter = map.getCenter();
+  const initialZoom = map.getZoom();
+
+  function animate(time) {
+    const progress = Math.min((time - start) / duration, 1);
+    const easeInOut = 0.5 * (1 - Math.cos(Math.PI * progress)); // ease function
+
+    // Interpolate lat/lng
+    const lat =
+      initialCenter.lat() +
+      (targetCenter.lat - initialCenter.lat()) * easeInOut;
+    const lng =
+      initialCenter.lng() +
+      (targetCenter.lng - initialCenter.lng()) * easeInOut;
+    map.setCenter({ lat, lng });
+
+    // Interpolate zoom
+    const zoom = initialZoom + (targetZoom - initialZoom) * easeInOut;
+    map.setZoom(zoom);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
 function App() {
   const [locations, setLocations] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const mapRef = useRef(null);
 
@@ -65,10 +96,6 @@ function App() {
 
   return (
     <>
-      <ChapterViewer
-        chapters={locations}
-        onSelect={(chapter) => setSelectedChapter(chapter)}
-      />
       <LoadScript googleMapsApiKey="AIzaSyBwAKbzz7h3cL9Aq35v-2PFIuEDaF49F1o">
         <GoogleMap
           mapContainerStyle={containerStyle}
@@ -94,15 +121,37 @@ function App() {
           chapters={locations}
           onSelect={(chapter, index) => {
             setSelectedChapter(chapter);
+            setSelectedIndex(index);
             if (mapRef.current) {
-              mapRef.current.panTo({ lat: chapter.lat, lng: chapter.lng });
-              mapRef.current.setZoom(10);
+              animateMapTo(
+                mapRef.current,
+                { lat: chapter.lat, lng: chapter.lng },
+                9
+              );
             }
           }}
           selectedIndex={locations.indexOf(selectedChapter)}
         />
 
-        <ChapterDetails chapter={selectedChapter} />
+        <ChapterDetails
+          chapter={selectedChapter}
+          isLast={selectedIndex === locations.length - 1}
+          onNext={() => {
+            const nextIndex = selectedIndex + 1;
+            if (nextIndex < locations.length) {
+              const nextChapter = locations[nextIndex];
+              setSelectedChapter(nextChapter);
+              setSelectedIndex(nextIndex);
+              if (mapRef.current) {
+                animateMapTo(
+                  mapRef.current,
+                  { lat: nextChapter.lat, lng: nextChapter.lng },
+                  9
+                );
+              }
+            }
+          }}
+        />
       </LoadScript>
     </>
   );
