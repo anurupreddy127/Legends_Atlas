@@ -1,5 +1,7 @@
-function ChapterDetails({ chapter, onNext, isLast }) {
+function ChapterDetails({ chapter, substories, activeIndex, onNext, onPrev }) {
   if (!chapter) return null;
+
+  const sub = substories[activeIndex];
 
   return (
     <div
@@ -15,42 +17,60 @@ function ChapterDetails({ chapter, onNext, isLast }) {
         zIndex: 999,
       }}
     >
-      <h4 style={{ margin: "0 0 8px", fontSize: "1rem", fontWeight: "bold" }}>
-        {chapter.title}
-      </h4>
-      <p style={{ fontSize: "0.92rem", color: "#444", marginBottom: "10px" }}>
-        {chapter.description}
-      </p>
-      {chapter.imageUrl && (
-        <img
-          src={chapter.imageUrl}
-          alt={chapter.title}
-          style={{
-            width: "100%",
-            borderRadius: "8px",
-            maxHeight: "200px",
-            objectFit: "cover",
-          }}
-        />
-      )}
-
-      {!isLast && (
-        <button
-          onClick={onNext}
-          style={{
-            marginTop: "14px",
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#1d72b8",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          Next Chapter →
-        </button>
+      <h4 style={{ margin: "0 0 6px" }}>{chapter.title}</h4>
+      {sub && (
+        <>
+          <h5 style={{ margin: "6px 0", fontSize: "0.95rem" }}>{sub.title}</h5>
+          <p style={{ fontSize: "0.9rem", color: "#444" }}>{sub.description}</p>
+          {sub.imageUrl && (
+            <img
+              src={sub.imageUrl}
+              alt={sub.title}
+              style={{
+                width: "100%",
+                borderRadius: "8px",
+                marginTop: "10px",
+                maxHeight: "200px",
+                objectFit: "cover",
+              }}
+            />
+          )}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "12px",
+            }}
+          >
+            <button
+              disabled={activeIndex === 0}
+              onClick={onPrev}
+              style={{
+                padding: "8px",
+                backgroundColor: "#ddd",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+              }}
+            >
+              ← Prev
+            </button>
+            <button
+              disabled={activeIndex === substories.length - 1}
+              onClick={onNext}
+              style={{
+                padding: "8px",
+                backgroundColor: "#1d72b8",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

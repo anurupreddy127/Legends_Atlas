@@ -7,6 +7,7 @@ import { seedFirestore } from "./seedFirestore";
 import { collection, getDocs } from "firebase/firestore";
 import ChapterViewer from "./ChapterViewer";
 import ChapterDetails from "./ChapterDetails";
+import { DirectionsRenderer } from "@react-google-maps/api";
 
 // 📍 Map container and center (Ayodhya)
 const containerStyle = {
@@ -61,7 +62,54 @@ function App() {
   const [locations, setLocations] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedChapter, setSelectedChapter] = useState(null);
+  const [substories, setSubstories] = useState([]);
+  const [activeSubIndex, setActiveSubIndex] = useState(0);
+  const [directions, setDirections] = useState(null);
   const mapRef = useRef(null);
+  const [routeAnimationInProgress, setRouteAnimationInProgress] =
+    useState(false);
+
+  const drawRoute = (origin, destination) => {
+    const directionsService = new window.google.maps.DirectionsService();
+
+    setRouteAnimationInProgress(true);
+
+    directionsService.route(
+      {
+        origin: new window.google.maps.LatLng(origin.lat, origin.lng),
+        destination: new window.google.maps.LatLng(
+          destination.lat,
+          destination.lng
+        ),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === window.google.maps.DirectionsStatus.OK) {
+          setDirections(result);
+          console.log("✅ Route loaded");
+
+          const bounds = new window.google.maps.LatLngBounds();
+          bounds.extend(new window.google.maps.LatLng(origin.lat, origin.lng));
+          bounds.extend(
+            new window.google.maps.LatLng(destination.lat, destination.lng)
+          );
+          mapRef.current?.fitBounds(bounds);
+
+          setTimeout(() => {
+            mapRef.current?.panTo(
+              new window.google.maps.LatLng(destination.lat, destination.lng)
+            );
+            mapRef.current?.setZoom(10);
+
+            setRouteAnimationInProgress(false);
+          }, 3000);
+        } else {
+          console.error("❌ Route failed:", result);
+          setRouteAnimationInProgress(false);
+        }
+      }
+    );
+  };
 
   useEffect(() => {
     async function fetchChapters() {
@@ -86,13 +134,119 @@ function App() {
   // 🧭 Center map when user selects a chapter from sidebar
   useEffect(() => {
     if (selectedChapter && mapRef.current) {
-      mapRef.current.panTo({
-        lat: selectedChapter.lat,
-        lng: selectedChapter.lng,
-      });
-      mapRef.current.setZoom(8);
+      animateMapTo(
+        mapRef.current,
+        {
+          lat: selectedChapter.lat,
+          lng: selectedChapter.lng,
+        },
+        9
+      );
+
+      // Fetch substories only for chapter1
+      const fetchSubstories = async () => {
+        if (selectedChapter.title === "Ayodhya – The Beginning") {
+          const subRef = collection(
+            doc(db, "stories", "ramayana", "chapters", "chapter1"),
+            "substories"
+          );
+          const snapshot = await getDocs(subRef);
+          const data = snapshot.docs
+            .map((doc) => doc.data())
+            .sort((a, b) => a.order - b.order);
+          setSubstories(data);
+          setActiveSubIndex(0); // reset to first substory
+        } else {
+          setSubstories([]); // clear for other chapters
+        }
+      };
+
+      fetchSubstories();
     }
   }, [selectedChapter]);
+
+  useEffect(() => {
+    const activeSub = substories[activeSubIndex];
+
+    if (activeSub && activeSub.lat && activeSub.lng && mapRef.current) {
+      // 🛣️ If not first substory, attempt route animation
+      if (activeSubIndex > 0) {
+        let prevSub = null;
+        for (let i = activeSubIndex - 1; i >= 0; i--) {
+          if (substories[i]?.lat && substories[i]?.lng) {
+            prevSub = substories[i];
+            break;
+          }
+        }
+
+        if (prevSub) {
+          const origin = {
+            lat: Number(prevSub.lat),
+            lng: Number(prevSub.lng),
+          };
+          const destination = {
+            lat: Number(activeSub.lat),
+            lng: Number(activeSub.lng),
+          };
+
+          console.log("🛣️ Drawing route from:", origin, "to", destination);
+          setRouteAnimationInProgress(true);
+
+          const directionsService = new window.google.maps.DirectionsService();
+          directionsService.route(
+            {
+              origin: new window.google.maps.LatLng(origin.lat, origin.lng),
+              destination: new window.google.maps.LatLng(
+                destination.lat,
+                destination.lng
+              ),
+              travelMode: window.google.maps.TravelMode.DRIVING,
+            },
+            (result, status) => {
+              if (status === window.google.maps.DirectionsStatus.OK) {
+                setDirections(result);
+                const bounds = new window.google.maps.LatLngBounds();
+                bounds.extend(
+                  new window.google.maps.LatLng(origin.lat, origin.lng)
+                );
+                bounds.extend(
+                  new window.google.maps.LatLng(
+                    destination.lat,
+                    destination.lng
+                  )
+                );
+                mapRef.current?.fitBounds(bounds);
+
+                // ⏱️ Wait 3s then zoom to destination
+                setTimeout(() => {
+                  mapRef.current?.panTo(destination);
+                  mapRef.current?.setZoom(10);
+                  setDirections(null);
+                  setRouteAnimationInProgress(false);
+                }, 3000);
+              } else {
+                console.error("❌ Route failed:", result);
+                setRouteAnimationInProgress(false);
+              }
+            }
+          );
+          return;
+        }
+      }
+
+      // 🚫 No route — just center map
+      if (!routeAnimationInProgress) {
+        animateMapTo(
+          mapRef.current,
+          {
+            lat: Number(activeSub.lat),
+            lng: Number(activeSub.lng),
+          },
+          10
+        );
+      }
+    }
+  }, [activeSubIndex, substories]);
 
   return (
     <>
@@ -114,6 +268,34 @@ function App() {
               title={loc.name}
             />
           ))}
+          {directions && (
+            <DirectionsRenderer
+              directions={directions}
+              options={{
+                suppressMarkers: true,
+                polylineOptions: { strokeColor: "#FF0000" },
+              }}
+              key={JSON.stringify(
+                directions?.routes?.[0]?.overview_polyline?.points || ""
+              )}
+            />
+          )}
+
+          {(() => {
+            const activeSub = substories[activeSubIndex];
+            if (activeSub?.lat && activeSub?.lng) {
+              return (
+                <Marker
+                  position={{ lat: activeSub.lat, lng: activeSub.lng }}
+                  title={activeSub.title}
+                  icon={{
+                    url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png", // or change color
+                  }}
+                />
+              );
+            }
+            return null;
+          })()}
         </GoogleMap>
 
         {/* Render ChapterViewer and ChapterDetails */}
@@ -135,22 +317,14 @@ function App() {
 
         <ChapterDetails
           chapter={selectedChapter}
-          isLast={selectedIndex === locations.length - 1}
-          onNext={() => {
-            const nextIndex = selectedIndex + 1;
-            if (nextIndex < locations.length) {
-              const nextChapter = locations[nextIndex];
-              setSelectedChapter(nextChapter);
-              setSelectedIndex(nextIndex);
-              if (mapRef.current) {
-                animateMapTo(
-                  mapRef.current,
-                  { lat: nextChapter.lat, lng: nextChapter.lng },
-                  9
-                );
-              }
-            }
-          }}
+          substories={substories}
+          activeIndex={activeSubIndex}
+          onPrev={() => setActiveSubIndex((prev) => Math.max(prev - 1, 0))}
+          onNext={() =>
+            setActiveSubIndex((prev) =>
+              Math.min(prev + 1, substories.length - 1)
+            )
+          }
         />
       </LoadScript>
     </>
