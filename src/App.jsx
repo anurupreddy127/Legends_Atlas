@@ -8,6 +8,9 @@ import { collection, getDocs } from "firebase/firestore";
 import ChapterViewer from "./ChapterViewer";
 import ChapterDetails from "./ChapterDetails";
 import { DirectionsRenderer } from "@react-google-maps/api";
+import { animateMapTo } from "./utils/animateMapTo";
+import RamayanaMap from "./components/RamayanaMap"; // Import your custom map component
+import { drawRoute } from "./utils/drawRoute";
 
 // 📍 Map container and center (Ayodhya)
 const containerStyle = {
@@ -21,43 +24,6 @@ const center = {
   lng: 82.2041,
 };
 
-// const locations = [
-//   { name: "Ayodhya", lat: 26.7996, lng: 82.2041 },
-//   { name: "Kishkindha (Hampi)", lat: 15.335, lng: 76.46 },
-//   { name: "Rameswaram", lat: 9.2876, lng: 79.3129 },
-//   { name: "Lanka (Nuwara Eliya)", lat: 6.9497, lng: 80.7891 },
-// ];
-
-function animateMapTo(map, targetCenter, targetZoom, duration = 1000) {
-  const start = performance.now();
-  const initialCenter = map.getCenter();
-  const initialZoom = map.getZoom();
-
-  function animate(time) {
-    const progress = Math.min((time - start) / duration, 1);
-    const easeInOut = 0.5 * (1 - Math.cos(Math.PI * progress)); // ease function
-
-    // Interpolate lat/lng
-    const lat =
-      initialCenter.lat() +
-      (targetCenter.lat - initialCenter.lat()) * easeInOut;
-    const lng =
-      initialCenter.lng() +
-      (targetCenter.lng - initialCenter.lng()) * easeInOut;
-    map.setCenter({ lat, lng });
-
-    // Interpolate zoom
-    const zoom = initialZoom + (targetZoom - initialZoom) * easeInOut;
-    map.setZoom(zoom);
-
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    }
-  }
-
-  requestAnimationFrame(animate);
-}
-
 function App() {
   const [locations, setLocations] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -68,48 +34,10 @@ function App() {
   const mapRef = useRef(null);
   const [routeAnimationInProgress, setRouteAnimationInProgress] =
     useState(false);
-
-  const drawRoute = (origin, destination) => {
-    const directionsService = new window.google.maps.DirectionsService();
-
-    setRouteAnimationInProgress(true);
-
-    directionsService.route(
-      {
-        origin: new window.google.maps.LatLng(origin.lat, origin.lng),
-        destination: new window.google.maps.LatLng(
-          destination.lat,
-          destination.lng
-        ),
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK) {
-          setDirections(result);
-          console.log("✅ Route loaded");
-
-          const bounds = new window.google.maps.LatLngBounds();
-          bounds.extend(new window.google.maps.LatLng(origin.lat, origin.lng));
-          bounds.extend(
-            new window.google.maps.LatLng(destination.lat, destination.lng)
-          );
-          mapRef.current?.fitBounds(bounds);
-
-          setTimeout(() => {
-            mapRef.current?.panTo(
-              new window.google.maps.LatLng(destination.lat, destination.lng)
-            );
-            mapRef.current?.setZoom(10);
-
-            setRouteAnimationInProgress(false);
-          }, 3000);
-        } else {
-          console.error("❌ Route failed:", result);
-          setRouteAnimationInProgress(false);
-        }
-      }
-    );
-  };
+  const [polyLinePath, setPolyLinePath] = useState(null);
+  const [movingMarkerPosition, setMovingMarkerPosition] = useState(null);
+  const animationInProgressRef = useRef(false);
+  const [showDestinationMarker, setShowDestinationMarker] = useState(false);
 
   useEffect(() => {
     async function fetchChapters() {
@@ -169,8 +97,7 @@ function App() {
     const activeSub = substories[activeSubIndex];
 
     if (activeSub && activeSub.lat && activeSub.lng && mapRef.current) {
-      // 🛣️ If not first substory, attempt route animation
-      if (activeSubIndex > 0) {
+      if (activeSubIndex > 0 && !animationInProgressRef.current) {
         let prevSub = null;
         for (let i = activeSubIndex - 1; i >= 0; i--) {
           if (substories[i]?.lat && substories[i]?.lng) {
@@ -180,62 +107,62 @@ function App() {
         }
 
         if (prevSub) {
-          const origin = {
-            lat: Number(prevSub.lat),
-            lng: Number(prevSub.lng),
-          };
-          const destination = {
-            lat: Number(activeSub.lat),
-            lng: Number(activeSub.lng),
-          };
+          animationInProgressRef.current = true;
+          setShowDestinationMarker(false);
 
-          console.log("🛣️ Drawing route from:", origin, "to", destination);
-          setRouteAnimationInProgress(true);
-
-          const directionsService = new window.google.maps.DirectionsService();
-          directionsService.route(
-            {
-              origin: new window.google.maps.LatLng(origin.lat, origin.lng),
-              destination: new window.google.maps.LatLng(
-                destination.lat,
-                destination.lng
-              ),
-              travelMode: window.google.maps.TravelMode.DRIVING,
+          drawRoute({
+            origin: { lat: Number(prevSub.lat), lng: Number(prevSub.lng) },
+            destination: {
+              lat: Number(activeSub.lat),
+              lng: Number(activeSub.lng),
             },
-            (result, status) => {
-              if (status === window.google.maps.DirectionsStatus.OK) {
-                setDirections(result);
-                const bounds = new window.google.maps.LatLngBounds();
-                bounds.extend(
-                  new window.google.maps.LatLng(origin.lat, origin.lng)
-                );
-                bounds.extend(
-                  new window.google.maps.LatLng(
-                    destination.lat,
-                    destination.lng
-                  )
-                );
-                mapRef.current?.fitBounds(bounds);
+            mapRef,
+            onDone: (path) => {
+              if (path) {
+                const marker = new window.google.maps.Marker({
+                  map: mapRef.current,
+                  position: path[0],
+                  icon: {
+                    path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                    scale: 5,
+                    strokeColor: "blue",
+                  },
+                });
 
-                // ⏱️ Wait 3s then zoom to destination
+                console.log("🎯 Animating marker");
+                import("./utils/animateMapTo").then(
+                  ({ animateMarkerAlongPath }) => {
+                    animateMarkerAlongPath(marker, path, 20); // adjust speed as needed
+                  }
+                );
+
                 setTimeout(() => {
-                  mapRef.current?.panTo(destination);
-                  mapRef.current?.setZoom(10);
-                  setDirections(null);
-                  setRouteAnimationInProgress(false);
-                }, 3000);
+                  marker.setMap(null);
+                  animationInProgressRef.current = false;
+                  setShowDestinationMarker(true);
+                  // 🔍 Zoom in on destination
+
+                  animateMapTo(
+                    mapRef.current,
+                    {
+                      lat: Number(activeSub.lat),
+                      lng: Number(activeSub.lng),
+                    },
+                    10,
+                    1300 // zoom duration in ms
+                  );
+                }, path.length * 20 + 100); // estimate total animation time
               } else {
-                console.error("❌ Route failed:", result);
-                setRouteAnimationInProgress(false);
+                animationInProgressRef.current = false;
               }
-            }
-          );
+            },
+          });
+
           return;
         }
       }
 
-      // 🚫 No route — just center map
-      if (!routeAnimationInProgress) {
+      if (!animationInProgressRef.current) {
         animateMapTo(
           mapRef.current,
           {
@@ -251,52 +178,20 @@ function App() {
   return (
     <>
       <LoadScript googleMapsApiKey="AIzaSyBwAKbzz7h3cL9Aq35v-2PFIuEDaF49F1o">
-        <GoogleMap
-          mapContainerStyle={containerStyle}
+        <RamayanaMap
           center={center}
-          zoom={5}
-          onLoad={(map) => {
+          locations={locations}
+          directions={directions}
+          substories={substories}
+          activeSubIndex={activeSubIndex}
+          routeAnimationInProgress={routeAnimationInProgress}
+          showDestinationMarker={showDestinationMarker}
+          onMapLoad={(map) => {
             console.log("✅ Google Map Loaded");
             mapRef.current = map;
           }}
-          onError={(e) => console.error("❌ Map Load Error", e)}
-        >
-          {locations.map((loc, index) => (
-            <Marker
-              key={index}
-              position={{ lat: loc.lat, lng: loc.lng }}
-              title={loc.name}
-            />
-          ))}
-          {directions && (
-            <DirectionsRenderer
-              directions={directions}
-              options={{
-                suppressMarkers: true,
-                polylineOptions: { strokeColor: "#FF0000" },
-              }}
-              key={JSON.stringify(
-                directions?.routes?.[0]?.overview_polyline?.points || ""
-              )}
-            />
-          )}
-
-          {(() => {
-            const activeSub = substories[activeSubIndex];
-            if (activeSub?.lat && activeSub?.lng) {
-              return (
-                <Marker
-                  position={{ lat: activeSub.lat, lng: activeSub.lng }}
-                  title={activeSub.title}
-                  icon={{
-                    url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png", // or change color
-                  }}
-                />
-              );
-            }
-            return null;
-          })()}
-        </GoogleMap>
+          movingMarkerPosition={movingMarkerPosition} // Pass the animated marker position
+        />
 
         {/* Render ChapterViewer and ChapterDetails */}
         <ChapterViewer
