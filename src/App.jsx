@@ -20,8 +20,8 @@ const containerStyle = {
 };
 
 const center = {
-  lat: 26.7996,
-  lng: 82.2041,
+  lat: 21.7996,
+  lng: 79.2041,
 };
 
 function App() {
@@ -34,7 +34,6 @@ function App() {
   const mapRef = useRef(null);
   const [routeAnimationInProgress, setRouteAnimationInProgress] =
     useState(false);
-  const [polyLinePath, setPolyLinePath] = useState(null);
   const [movingMarkerPosition, setMovingMarkerPosition] = useState(null);
   const animationInProgressRef = useRef(false);
   const [showDestinationMarker, setShowDestinationMarker] = useState(false);
@@ -59,41 +58,53 @@ function App() {
     fetchChapters();
   }, []);
 
-  // 🧭 Center map when user selects a chapter from sidebar
   useEffect(() => {
-    if (selectedChapter && mapRef.current) {
+    if (!selectedChapter || !mapRef.current) return;
+
+    const chapterId =
+      selectedChapter.id ||
+      selectedChapter.chapterId ||
+      `chapter${selectedIndex + 1}`;
+
+    // 📍 If there are no substories yet, default to zoom into the chapter center (fallback if lat/lng exists)
+    if (!selectedChapter.lat || !selectedChapter.lng) {
+      animateMapTo(mapRef.current, { lat: 20.5937, lng: 78.9629 }, 5); // Center of India
+    } else {
       animateMapTo(
         mapRef.current,
-        {
-          lat: selectedChapter.lat,
-          lng: selectedChapter.lng,
-        },
+        { lat: selectedChapter.lat, lng: selectedChapter.lng },
         9
       );
-
-      // Fetch substories only for chapter1
-      const fetchSubstories = async () => {
-        if (selectedChapter.title === "Ayodhya – The Beginning") {
-          const subRef = collection(
-            doc(db, "stories", "ramayana", "chapters", "chapter1"),
-            "substories"
-          );
-          const snapshot = await getDocs(subRef);
-          const data = snapshot.docs
-            .map((doc) => doc.data())
-            .sort((a, b) => a.order - b.order);
-          setSubstories(data);
-          setActiveSubIndex(0); // reset to first substory
-        } else {
-          setSubstories([]); // clear for other chapters
-        }
-      };
-
-      fetchSubstories();
     }
+
+    const fetchSubstories = async () => {
+      try {
+        const subRef = collection(
+          doc(db, "stories", "ramayana", "chapters", chapterId),
+          "substories"
+        );
+        const snapshot = await getDocs(subRef);
+        const data = snapshot.docs
+          .map((doc) => doc.data())
+          .sort((a, b) => a.order - b.order);
+
+        if (data.length > 0) {
+          setSubstories(data);
+          setActiveSubIndex(0);
+        } else {
+          setSubstories([]); // No substories, fallback mode
+        }
+      } catch (error) {
+        console.error("❌ Error fetching substories:", error);
+        setSubstories([]);
+      }
+    };
+
+    fetchSubstories();
   }, [selectedChapter]);
 
   useEffect(() => {
+    if (substories.length === 0) return;
     const activeSub = substories[activeSubIndex];
 
     if (activeSub && activeSub.lat && activeSub.lng && mapRef.current) {
@@ -191,6 +202,7 @@ function App() {
             mapRef.current = map;
           }}
           movingMarkerPosition={movingMarkerPosition} // Pass the animated marker position
+          activeChapterIndex={selectedIndex}
         />
 
         {/* Render ChapterViewer and ChapterDetails */}
@@ -200,11 +212,21 @@ function App() {
             setSelectedChapter(chapter);
             setSelectedIndex(index);
             if (mapRef.current) {
-              animateMapTo(
-                mapRef.current,
-                { lat: chapter.lat, lng: chapter.lng },
-                9
-              );
+              // ✅ If there are substories, center on the first one
+              if (
+                substories.length > 0 &&
+                substories[0].lat &&
+                substories[0].lng
+              ) {
+                animateMapTo(
+                  mapRef.current,
+                  {
+                    lat: Number(substories[0].lat),
+                    lng: Number(substories[0].lng),
+                  },
+                  9
+                );
+              }
             }
           }}
           selectedIndex={locations.indexOf(selectedChapter)}
@@ -215,11 +237,19 @@ function App() {
           substories={substories}
           activeIndex={activeSubIndex}
           onPrev={() => setActiveSubIndex((prev) => Math.max(prev - 1, 0))}
-          onNext={() =>
-            setActiveSubIndex((prev) =>
-              Math.min(prev + 1, substories.length - 1)
-            )
-          }
+          onNext={() => {
+            if (activeSubIndex < substories.length - 1) {
+              setActiveSubIndex((prev) => prev + 1);
+            } else {
+              // Go to the next chapter
+              const nextChapterIndex = selectedIndex + 1;
+              if (nextChapterIndex < locations.length) {
+                const nextChapter = locations[nextChapterIndex];
+                setSelectedChapter(nextChapter);
+                setSelectedIndex(nextChapterIndex);
+              }
+            }
+          }}
         />
       </LoadScript>
     </>

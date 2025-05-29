@@ -15,6 +15,7 @@ const RamayanaMap = ({
   // routeAnimationInProgress,
   showDestinationMarker,
   movingMarkerPosition,
+  activeChapterIndex,
 }) => {
   return (
     <GoogleMap
@@ -24,13 +25,16 @@ const RamayanaMap = ({
       onLoad={onMapLoad}
     >
       {/* 📍 Chapter markers */}
-      {locations.map((loc, index) => (
-        <Marker
-          key={index}
-          position={{ lat: loc.lat, lng: loc.lng }}
-          title={loc.name}
-        />
-      ))}
+      {!substories.length &&
+        locations.map((loc, index) =>
+          index === activeChapterIndex ? (
+            <Marker
+              key={index}
+              position={{ lat: loc.lat, lng: loc.lng }}
+              title={loc.name}
+            />
+          ) : null
+        )}
 
       {/* 🧍 Rama's moving marker (animated) */}
       {movingMarkerPosition && (
