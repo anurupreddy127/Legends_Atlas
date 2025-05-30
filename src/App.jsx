@@ -1,22 +1,18 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState, useRef } from "react";
-import { LoadScript, GoogleMap, Marker } from "@react-google-maps/api";
-import { db } from "./firebaseConfig"; // 👈 Your existing Firebase setup
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { seedFirestore } from "./seedFirestore";
-import { collection, getDocs } from "firebase/firestore";
+import { LoadScript } from "@react-google-maps/api";
+import { db } from "./firebaseConfig";
+import { doc, collection, getDocs } from "firebase/firestore";
 import ChapterViewer from "./ChapterViewer";
 import ChapterDetails from "./ChapterDetails";
-import { DirectionsRenderer } from "@react-google-maps/api";
 import { animateMapTo } from "./utils/animateMapTo";
-import RamayanaMap from "./components/RamayanaMap"; // Import your custom map component
+import RamayanaMap from "./components/RamayanaMap";
 import { drawRoute } from "./utils/drawRoute";
 
-// 📍 Map container and center (Ayodhya)
 const containerStyle = {
   width: "100%",
-  height: "100vh", // full screen height
-  minHeight: "500px", // fallback height
+  height: "100vh",
+  minHeight: "500px",
 };
 
 const center = {
@@ -46,8 +42,7 @@ function App() {
 
         const data = snapshot.docs
           .map((doc) => doc.data())
-          .sort((a, b) => a.order - b.order); // optional: sort by order
-
+          .sort((a, b) => a.order - b.order);
         setLocations(data);
         console.log("✅ Loaded Chapters:", data);
       } catch (error) {
@@ -66,9 +61,8 @@ function App() {
       selectedChapter.chapterId ||
       `chapter${selectedIndex + 1}`;
 
-    // 📍 If there are no substories yet, default to zoom into the chapter center (fallback if lat/lng exists)
     if (!selectedChapter.lat || !selectedChapter.lng) {
-      animateMapTo(mapRef.current, { lat: 20.5937, lng: 78.9629 }, 5); // Center of India
+      animateMapTo(mapRef.current, { lat: 20.5937, lng: 78.9629 }, 5);
     } else {
       animateMapTo(
         mapRef.current,
@@ -88,12 +82,8 @@ function App() {
           .map((doc) => doc.data())
           .sort((a, b) => a.order - b.order);
 
-        if (data.length > 0) {
-          setSubstories(data);
-          setActiveSubIndex(0);
-        } else {
-          setSubstories([]); // No substories, fallback mode
-        }
+        setSubstories(data);
+        setActiveSubIndex(0);
       } catch (error) {
         console.error("❌ Error fetching substories:", error);
         setSubstories([]);
@@ -140,10 +130,9 @@ function App() {
                   },
                 });
 
-                console.log("🎯 Animating marker");
                 import("./utils/animateMapTo").then(
                   ({ animateMarkerAlongPath }) => {
-                    animateMarkerAlongPath(marker, path, 20); // adjust speed as needed
+                    animateMarkerAlongPath(marker, path, 20);
                   }
                 );
 
@@ -151,24 +140,18 @@ function App() {
                   marker.setMap(null);
                   animationInProgressRef.current = false;
                   setShowDestinationMarker(true);
-                  // 🔍 Zoom in on destination
-
                   animateMapTo(
                     mapRef.current,
-                    {
-                      lat: Number(activeSub.lat),
-                      lng: Number(activeSub.lng),
-                    },
+                    { lat: Number(activeSub.lat), lng: Number(activeSub.lng) },
                     10,
-                    1300 // zoom duration in ms
+                    1300
                   );
-                }, path.length * 20 + 100); // estimate total animation time
+                }, path.length * 20 + 100);
               } else {
                 animationInProgressRef.current = false;
               }
             },
           });
-
           return;
         }
       }
@@ -176,10 +159,7 @@ function App() {
       if (!animationInProgressRef.current) {
         animateMapTo(
           mapRef.current,
-          {
-            lat: Number(activeSub.lat),
-            lng: Number(activeSub.lng),
-          },
+          { lat: Number(activeSub.lat), lng: Number(activeSub.lng) },
           10
         );
       }
@@ -201,32 +181,29 @@ function App() {
             console.log("✅ Google Map Loaded");
             mapRef.current = map;
           }}
-          movingMarkerPosition={movingMarkerPosition} // Pass the animated marker position
+          movingMarkerPosition={movingMarkerPosition}
           activeChapterIndex={selectedIndex}
         />
 
-        {/* Render ChapterViewer and ChapterDetails */}
         <ChapterViewer
           chapters={locations}
           onSelect={(chapter, index) => {
             setSelectedChapter(chapter);
             setSelectedIndex(index);
-            if (mapRef.current) {
-              // ✅ If there are substories, center on the first one
-              if (
-                substories.length > 0 &&
-                substories[0].lat &&
-                substories[0].lng
-              ) {
-                animateMapTo(
-                  mapRef.current,
-                  {
-                    lat: Number(substories[0].lat),
-                    lng: Number(substories[0].lng),
-                  },
-                  9
-                );
-              }
+            if (
+              mapRef.current &&
+              substories.length > 0 &&
+              substories[0].lat &&
+              substories[0].lng
+            ) {
+              animateMapTo(
+                mapRef.current,
+                {
+                  lat: Number(substories[0].lat),
+                  lng: Number(substories[0].lng),
+                },
+                9
+              );
             }
           }}
           selectedIndex={locations.indexOf(selectedChapter)}
@@ -237,16 +214,91 @@ function App() {
           substories={substories}
           activeIndex={activeSubIndex}
           onPrev={() => setActiveSubIndex((prev) => Math.max(prev - 1, 0))}
-          onNext={() => {
+          onNext={async () => {
             if (activeSubIndex < substories.length - 1) {
               setActiveSubIndex((prev) => prev + 1);
             } else {
-              // Go to the next chapter
               const nextChapterIndex = selectedIndex + 1;
               if (nextChapterIndex < locations.length) {
                 const nextChapter = locations[nextChapterIndex];
-                setSelectedChapter(nextChapter);
-                setSelectedIndex(nextChapterIndex);
+                const chapterId =
+                  nextChapter.id ||
+                  nextChapter.chapterId ||
+                  `chapter${nextChapterIndex + 1}`;
+
+                // Use last known coordinates from previous substories
+                let lastKnownSub = [...substories]
+                  .reverse()
+                  .find((s) => s.lat && s.lng);
+
+                const snapshot = await getDocs(
+                  collection(
+                    doc(db, "stories", "ramayana", "chapters", chapterId),
+                    "substories"
+                  )
+                );
+                const nextSubstories = snapshot.docs
+                  .map((doc) => doc.data())
+                  .sort((a, b) => a.order - b.order);
+
+                const firstNextSub = nextSubstories.find((s) => s.lat && s.lng);
+
+                if (lastKnownSub && firstNextSub) {
+                  animationInProgressRef.current = true;
+
+                  drawRoute({
+                    origin: {
+                      lat: Number(lastKnownSub.lat),
+                      lng: Number(lastKnownSub.lng),
+                    },
+                    destination: {
+                      lat: Number(firstNextSub.lat),
+                      lng: Number(firstNextSub.lng),
+                    },
+                    mapRef,
+                    onDone: (path) => {
+                      if (path) {
+                        const marker = new window.google.maps.Marker({
+                          map: mapRef.current,
+                          position: path[0],
+                          icon: {
+                            path: window.google.maps.SymbolPath
+                              .FORWARD_CLOSED_ARROW,
+                            scale: 5,
+                            strokeColor: "blue",
+                          },
+                        });
+
+                        import("./utils/animateMapTo").then(
+                          ({ animateMarkerAlongPath }) => {
+                            animateMarkerAlongPath(marker, path, 20);
+                          }
+                        );
+
+                        setTimeout(() => {
+                          marker.setMap(null);
+                          animationInProgressRef.current = false;
+                          setShowDestinationMarker(true);
+                          setSelectedChapter(nextChapter);
+                          setSelectedIndex(nextChapterIndex);
+                          setSubstories(nextSubstories);
+                          setActiveSubIndex(0);
+                        }, path.length * 20 + 100);
+                      } else {
+                        animationInProgressRef.current = false;
+                        setSelectedChapter(nextChapter);
+                        setSelectedIndex(nextChapterIndex);
+                        setSubstories(nextSubstories);
+                        setActiveSubIndex(0);
+                      }
+                    },
+                  });
+                } else {
+                  setSelectedChapter(nextChapter);
+                  setSelectedIndex(nextChapterIndex);
+                  setSubstories(nextSubstories);
+                  setActiveSubIndex(0);
+                }
               }
             }
           }}
