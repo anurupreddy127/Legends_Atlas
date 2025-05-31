@@ -21,8 +21,11 @@ export function drawRoute({ origin, destination, mapRef, onDone }) {
         // return path to animate
         onDone?.(path);
       } else {
-        console.error("❌ Route load failed", result);
-        onDone?.(null);
+        console.warn("⚠️ No driving route found, using fallback line.");
+        onDone?.([
+          new window.google.maps.LatLng(origin.lat, origin.lng),
+          new window.google.maps.LatLng(destination.lat, destination.lng),
+        ]);
       }
     }
   );

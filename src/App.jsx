@@ -94,75 +94,94 @@ function App() {
   }, [selectedChapter]);
 
   useEffect(() => {
-    if (substories.length === 0) return;
+    if (!mapRef.current || substories.length === 0) return;
+
     const activeSub = substories[activeSubIndex];
 
-    if (activeSub && activeSub.lat && activeSub.lng && mapRef.current) {
-      if (activeSubIndex > 0 && !animationInProgressRef.current) {
-        let prevSub = null;
-        for (let i = activeSubIndex - 1; i >= 0; i--) {
-          if (substories[i]?.lat && substories[i]?.lng) {
-            prevSub = substories[i];
-            break;
-          }
-        }
+    if (!activeSub?.lat || !activeSub?.lng) {
+      // 📍 If no coordinates — zoom out to India
+      animateMapTo(mapRef.current, { lat: 20.5937, lng: 78.9629 }, 5);
+      return;
+    }
 
-        if (prevSub) {
-          animationInProgressRef.current = true;
-          setShowDestinationMarker(false);
+    // 🔍 Find last substory with coordinates
+    const prevSub = [...substories]
+      .slice(0, activeSubIndex)
+      .reverse()
+      .find((s) => s.lat && s.lng);
 
-          drawRoute({
-            origin: { lat: Number(prevSub.lat), lng: Number(prevSub.lng) },
-            destination: {
-              lat: Number(activeSub.lat),
-              lng: Number(activeSub.lng),
-            },
-            mapRef,
-            onDone: (path) => {
-              if (path) {
-                const marker = new window.google.maps.Marker({
-                  map: mapRef.current,
-                  position: path[0],
-                  icon: {
-                    path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                    scale: 5,
-                    strokeColor: "blue",
-                  },
-                });
+    if (
+      prevSub &&
+      Number(prevSub.lat) === Number(activeSub.lat) &&
+      Number(prevSub.lng) === Number(activeSub.lng)
+    ) {
+      // ⛔ Same coordinates — do nothing
+      return;
+    }
 
-                import("./utils/animateMapTo").then(
-                  ({ animateMarkerAlongPath }) => {
-                    animateMarkerAlongPath(marker, path, 20);
-                  }
-                );
+    // ✅ Animate transition only if previous is different
+    if (prevSub && !animationInProgressRef.current) {
+      animationInProgressRef.current = true;
+      setShowDestinationMarker(false);
 
-                setTimeout(() => {
-                  marker.setMap(null);
-                  animationInProgressRef.current = false;
-                  setShowDestinationMarker(true);
-                  animateMapTo(
-                    mapRef.current,
-                    { lat: Number(activeSub.lat), lng: Number(activeSub.lng) },
-                    10,
-                    1300
-                  );
-                }, path.length * 20 + 100);
-              } else {
-                animationInProgressRef.current = false;
+      drawRoute({
+        origin: {
+          lat: Number(prevSub.lat),
+          lng: Number(prevSub.lng),
+        },
+        destination: {
+          lat: Number(activeSub.lat),
+          lng: Number(activeSub.lng),
+        },
+        mapRef,
+        onDone: (path) => {
+          if (path) {
+            const marker = new window.google.maps.Marker({
+              map: mapRef.current,
+              position: path[0],
+              icon: {
+                path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 5,
+                strokeColor: "blue",
+              },
+            });
+
+            import("./utils/animateMapTo").then(
+              ({ animateMarkerAlongPath }) => {
+                animateMarkerAlongPath(marker, path, 20);
               }
-            },
-          });
-          return;
-        }
-      }
+            );
 
-      if (!animationInProgressRef.current) {
-        animateMapTo(
-          mapRef.current,
-          { lat: Number(activeSub.lat), lng: Number(activeSub.lng) },
-          10
-        );
-      }
+            setTimeout(() => {
+              marker.setMap(null);
+              animationInProgressRef.current = false;
+              setShowDestinationMarker(true);
+              animateMapTo(
+                mapRef.current,
+                {
+                  lat: Number(activeSub.lat),
+                  lng: Number(activeSub.lng),
+                },
+                10,
+                1300
+              );
+            }, path.length * 20 + 100);
+          } else {
+            animationInProgressRef.current = false;
+          }
+        },
+      });
+    } else {
+      // 🔄 No prevSub (e.g., first substory) — just zoom in
+      animateMapTo(
+        mapRef.current,
+        {
+          lat: Number(activeSub.lat),
+          lng: Number(activeSub.lng),
+        },
+        10,
+        1300
+      );
     }
   }, [activeSubIndex, substories]);
 

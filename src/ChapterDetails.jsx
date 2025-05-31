@@ -51,7 +51,7 @@ function ChapterDetails({ chapter, substories, activeIndex, onNext, onPrev }) {
     <div
       style={{
         position: "absolute",
-        top: "320px",
+        top: "380px",
         left: "10px",
         width: "300px",
         backgroundColor: "#ffffff",
