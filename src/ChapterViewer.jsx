@@ -1,40 +1,46 @@
+// ChapterViewer.jsx
+import React from "react"; // React is typically implicitly imported in newer React versions, but good practice to keep it.
+
 function ChapterViewer({ chapters, onSelect, selectedIndex }) {
   return (
     <div
-      style={{
-        position: "absolute",
-        top: "10px",
-        left: "10px",
-        width: "300px",
-        backgroundColor: "#ffffff",
-        padding: "1rem",
-        borderRadius: "12px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-        zIndex: 1000,
-      }}
+      // Main container styling
+      className="
+        absolute top-13 left-3              /* Positioning from original */
+        w-[300px]                           /* Fixed width for consistency */
+        bg-white                            /* White background */
+        p-4                                 /* Padding inside the box */
+        rounded-xl                          /* Rounded corners */
+        shadow-                             /* Larger shadow for depth */
+      "
     >
-      <h3
-        style={{ marginBottom: "1rem", fontWeight: "bold", fontSize: "1.1rem" }}
-      >
+      {/* Heading styling */}
+      <h3 className="mb-4 font-bold text-xl text-gray-800">
+        {" "}
+        {/* Larger font for prominence, bold, gray text */}
         📜 Ramayana Chapters
       </h3>
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      <ul className="list-none p-0 m-0">
         {chapters.map((chapter, index) => (
-          <li key={index} style={{ marginBottom: "10px" }}>
+          <li key={index} className="mb-2 last:mb-0">
+            {" "}
+            {/* Margin bottom for spacing, remove for last item */}
             <button
               onClick={() => onSelect(chapter, index)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                textAlign: "left",
-                borderRadius: "8px",
-                backgroundColor:
-                  selectedIndex === index ? "#f2f2f2" : "#ffffff",
-                border: "1px solid #ddd",
-                cursor: "pointer",
-                fontWeight: selectedIndex === index ? "bold" : "normal",
-                transition: "background-color 0.3s ease",
-              }}
+              // Button styling based on selection state and hover
+              className={`
+                w-full py-2.5 px-3.5            /* Full width, adjusted padding */
+                text-left                       /* Align text to left */
+                rounded-lg                      /* Slightly rounded corners */
+                border border-gray-300          /* Subtle border */
+                cursor-pointer                  /* Pointer on hover */
+                transition-colors duration-200 ease-in-out /* Smooth transition for background */
+                ${
+                  selectedIndex === index
+                    ? "bg-blue-500 text-white font-semibold shadow-md" /* Selected state: blue background, white text, bold, shadow */
+                    : "bg-white text-gray-700 hover:bg-gray-50 font-normal" /* Unselected state: white background, hover effect */
+                }
+              `}
             >
               {`Chapter ${index + 1}: ${chapter.title}`}
             </button>
