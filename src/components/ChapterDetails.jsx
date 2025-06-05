@@ -1,4 +1,4 @@
-import SubstoryCard from "./components/SubstoryCard";
+import SubstoryCard from "./SubstoryCard";
 
 function ChapterDetails({ chapter, substories, activeIndex, onNext, onPrev }) {
   if (!chapter) return null;
