@@ -241,7 +241,7 @@ function App() {
   }, [activeSubIndex, substories]);
 
   return (
-    <>
+    <div className="font-playfair">
       <LoadScript googleMapsApiKey="AIzaSyBwAKbzz7h3cL9Aq35v-2PFIuEDaF49F1o">
         <RamayanaMap
           center={center}
@@ -382,7 +382,7 @@ function App() {
           />
         )}
       </LoadScript>
-    </>
+    </div>
   );
 }
 

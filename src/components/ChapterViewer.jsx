@@ -6,12 +6,10 @@ function ChapterViewer({ chapters, onSelect, selectedIndex }) {
     <div
       // Main container styling
       className="
-        absolute top-13 left-3              /* Positioning from original */
-        w-[300px]                           /* Fixed width for consistency */
-        bg-white                            /* White background */
-        p-4                                 /* Padding inside the box */
-        rounded-xl                          /* Rounded corners */
-        shadow-                             /* Larger shadow for depth */
+        absolute top-13 left-3
+    w-[300px]
+    bg-white/30 backdrop-blur-md border border-white/40
+    p-4 rounded-xl shadow-lg text-white
       "
     >
       {/* Heading styling */}

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { db } from "../firebaseConfig"; // adjust path
 import { collection, getDocs } from "firebase/firestore";
 import StoryCard from "../components/Storycard";
+import AuthorSection from "../components/AuthorSection";
+import Navbar from "../components/Navbar";
 
 const HomePage = () => {
   const [stories, setStories] = useState([]);
@@ -21,35 +23,33 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="scroll-smooth">
+    <div className="font-playfair scroll-smooth">
       {/* Navbar */}
-      <nav className="fixed w-full bg-white shadow z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Legends Atlas</h1>
-          <div className="space-x-4">
-            <a href="#hero" className="hover:underline">
-              Home
-            </a>
-            <a href="#stories" className="hover:underline">
-              Stories
-            </a>
-            <a href="#author" className="hover:underline">
-              Author
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section
         id="hero"
-        className="h-screen flex items-center justify-center bg-gradient-to-br from-yellow-100 to-orange-200 pt-20"
+        className="h-screen flex items-center justify-center bg-gradient-to-br from-parchment via-goldenrod to-orange-200"
       >
-        <div className="text-center max-w-2xl px-4">
-          <h2 className="text-4xl font-extrabold mb-4">
+        {/* Background Logo */}
+        <img
+          src="/logo.png"
+          alt="Background Logo"
+          className="absolute w-[600px] md:w-[800px] opacity-7 pointer-events-none z-0"
+          style={{
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+
+        {/* Hero Content */}
+        <div className="text-center max-w-2xl px-4 relative z-10">
+          <h2 className="text-4xl font-extrabold mb-4 font-playfair">
             Discover Stories Like Never Before
           </h2>
-          <p className="text-lg mb-6">
+          <p className="text-lg mb-6 font-edu">
             Legends Atlas brings ancient epics and journeys to life using
             interactive maps and animated storytelling.
           </p>
@@ -78,38 +78,12 @@ const HomePage = () => {
       </section>
 
       {/* Author Section */}
-      <section id="author" className="min-h-[60vh] bg-gray-100 py-16 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <img
-            src="/your-photo.jpg"
-            alt="Author"
-            className="w-32 h-32 mx-auto rounded-full mb-4 object-cover"
-          />
-          <h3 className="text-2xl font-bold">Anurup Reddy</h3>
-          <p className="mt-2">
-            Creator of Legends Atlas. Passionate about maps, mythology, and
-            immersive digital storytelling.
-          </p>
-          <div className="mt-4 space-x-4">
-            <a
-              href="https://github.com/anurup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://linkedin.com/in/anurup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              LinkedIn
-            </a>
-          </div>
-        </div>
-      </section>
+      <AuthorSection />
+
+      <footer className="text-center py-6 text-sm text-gray-500">
+        © {new Date().getFullYear()} Legends Atlas — Built by Anurup Reddy
+        Koduru
+      </footer>
     </div>
   );
 };

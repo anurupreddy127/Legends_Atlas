@@ -14,9 +14,9 @@ function SubstoryCard({
   return (
     // Outer positioning wrapper
     // CHANGED: From left-[10px] to right-3, and top-[380px] to top-7 for alignment
-    <div className="absolute top-20 right-3 w-[300px]">
+    <div className="font-playfair absolute top-20 right-3 w-[300px]">
       {/* Main card container - adapted from Universe card */}
-      <div className="relative flex w-full flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-md">
+      <div className="relative flex w-full flex-col rounded-xl bg-white/30 backdrop-blur-md border border-white/40 text-grey-900 shadow-lg">
         {/* Top Graphic / Image section - now showing your image */}
         {/* Top Graphic / Image section - now showing your image */}
         <div className="relative mx-4 -mt-6 overflow-hidden rounded-xl bg-white flex items-center justify-center">
@@ -36,11 +36,11 @@ function SubstoryCard({
         {/* Card content section */}
         <div className="p-6">
           {/* Chapter Title - styled closer to Universe h5, but kept as h5 */}
-          <h5 className="mb-2 block font-sans text-xl font-semibold leading-snug tracking-normal text-blue-gray-900 antialiased">
+          <h5 className="mb-2 block font-sans text-xl font-semibold leading-snug tracking-normal text-gray-900 antialiased">
             {chapterTitle}
           </h5>
           {/* Substory Title - kept as h6, but with updated styling */}
-          <h6 className="mb-1 block font-sans text-lg font-medium leading-normal text-blue-gray-800 antialiased">
+          <h6 className="mb-1 block font-sans text-lg font-medium leading-normal text-gray-600 antialiased">
             {sub.title}
           </h6>
           {/* Substory Description - styled closer to Universe p */}

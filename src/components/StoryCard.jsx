@@ -12,7 +12,7 @@ const StoryCard = ({ story }) => {
         <div>
           <div className="story-title">{story.title}</div>
           {story.description && (
-            <div className="story-desc">{story.description}</div>
+            <div className="font-edu story-desc">{story.description}</div>
           )}
         </div>
       </div>

@@ -5,11 +5,9 @@ function ChapterDetails({ chapter, substories, activeIndex, onNext, onPrev }) {
 
   if (substories.length === 0) {
     return (
-      <div className="absolute top-[320px] left-[10px] w-[300px] bg-white p-4 rounded-xl shadow-md">
+      <div className="absolute top-[320px] left-[10px] w-[300px] bg-white/30 backdrop-blur-md border border-white/40 text-white p-4 rounded-xl shadow-lg">
         <h4 className="font-bold mb-2">{chapter.title}</h4>
-        <p className="italic text-gray-600">
-          No sub-stories are available for this chapter.
-        </p>
+        <p className="italic">No sub-stories are available for this chapter.</p>
       </div>
     );
   }
@@ -18,9 +16,9 @@ function ChapterDetails({ chapter, substories, activeIndex, onNext, onPrev }) {
 
   if (!sub) {
     return (
-      <div className="absolute top-[320px] left-[10px] w-[300px] bg-white p-4 rounded-xl shadow-md">
+      <div className="absolute top-[320px] left-[10px] w-[300px] bg-white/30 backdrop-blur-md border border-white/40 text-white p-4 rounded-xl shadow-lg">
         <h4 className="font-bold mb-2">{chapter.title}</h4>
-        <p className="text-sm text-gray-700">Loading substory...</p>
+        <p className="italic">Loading Substories..</p>
       </div>
     );
   }

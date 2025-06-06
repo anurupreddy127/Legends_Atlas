@@ -54,7 +54,7 @@ const StoryDetailPage = () => {
   }
 
   return (
-    <div className="relative h-screen w-full">
+    <div className="font-playfair relative h-screen w-full">
       {/* Fullscreen Map (absolute) */}
       <div className="absolute inset-0 z-0">
         <LoadScript googleMapsApiKey="AIzaSyBwAKbzz7h3cL9Aq35v-2PFIuEDaF49F1o">
