@@ -46,8 +46,8 @@ src/
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/your-username/legends-atlas.git
-   cd legends-atlas
+   git clone https://github.com/anurupreddy127/Legends_Atlas.git
+   cd Legends_Atlas
 
    ```
 
