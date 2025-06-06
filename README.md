@@ -31,13 +31,15 @@
 
 ## 📁 Project Structure
 
+```plaintext
 src/
-├── assets/ # Images and logos
-├── components/ # UI Components (Map, Cards, Navbar, etc.)
-├── pages/ # Page components (Home, StoryPage, NotFound)
-├── styles/ # Tailwind + custom CSS
-├── firebaseConfig.js # Firebase setup
-└── App.jsx # Routing
+├── assets/            # Images and logos
+├── components/        # UI Components (Map, Cards, Navbar, etc.)
+├── pages/             # Page components (Home, StoryPage, NotFound)
+├── styles/            # Tailwind + custom CSS
+├── firebaseConfig.js  # Firebase setup
+└── App.jsx            # Routing
+```
 
 ## 🧪 How to Run Locally
 
@@ -51,8 +53,8 @@ src/
 
 2. **Install dependencies**
 
-   ```npm install
-
+   ```
+   npm install
    ```
 
 3. **Add your Firebase config**
@@ -60,8 +62,8 @@ src/
 
 4. **Start the development server**
 
-   ```npm run dev
-
+   ```
+   npm run dev
    ```
 
 5. **Open in browser**
@@ -70,6 +72,9 @@ src/
 ## 📌 Future Enhancements
 
 🌐 Add more stories from global mythologies
+
 🕓 Time slider for historical events
+
 🧭 Mini-map with progress tracking
+
 📱 Full mobile optimization
