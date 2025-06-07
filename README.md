@@ -57,14 +57,23 @@ src/
    npm install
    ```
 
-3. **Add your Firebase config**
-   Update firebaseConfig.js with your Firebase project credentials.
+3. **Set up environment variables**
+   Create a .env file in the root of the project.
+
+   Then, add your Firebase and Google Maps API keys to the .env file:
+
+   ```
+   VITE_FIREBASE_API_KEY=your_firebase_api_key_here
+   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+   ```
 
 4. **Start the development server**
 
-   ```
-   npm run dev
-   ```
+```
+
+npm run dev
+
+```
 
 5. **Open in browser**
    Navigate to http://localhost:5173
@@ -78,3 +87,7 @@ src/
 🧭 Mini-map with progress tracking
 
 📱 Full mobile optimization
+
+```
+
+```
