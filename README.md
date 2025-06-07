@@ -58,6 +58,7 @@ src/
    ```
 
 3. **Set up environment variables**
+
    Create a .env file in the root of the project.
 
    Then, add your Firebase and Google Maps API keys to the .env file:
