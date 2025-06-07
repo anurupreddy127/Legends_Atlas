@@ -70,13 +70,12 @@ src/
 
 4. **Start the development server**
 
-```
-
-npm run dev
-
-```
+   ```
+   npm run dev
+   ```
 
 5. **Open in browser**
+
    Navigate to http://localhost:5173
 
 ## 📌 Future Enhancements
@@ -88,7 +87,3 @@ npm run dev
 🧭 Mini-map with progress tracking
 
 📱 Full mobile optimization
-
-```
-
-```
