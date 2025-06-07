@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDZe_oaOpu1zem-xVAIEi0SXsK57A_VXVw",
+  apiKey: "import.meta.env.VITE_FIREBASE_API_KEY",
   authDomain: "ramayana-map.firebaseapp.com",
   projectId: "ramayana-map",
   storageBucket: "ramayana-map.appspot.com",

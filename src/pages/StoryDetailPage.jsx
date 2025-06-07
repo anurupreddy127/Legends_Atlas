@@ -57,7 +57,7 @@ const StoryDetailPage = () => {
     <div className="font-playfair relative h-screen w-full">
       {/* Fullscreen Map (absolute) */}
       <div className="absolute inset-0 z-0">
-        <LoadScript googleMapsApiKey="AIzaSyBwAKbzz7h3cL9Aq35v-2PFIuEDaF49F1o">
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
           <RamayanaMap
             center={center}
             locations={[]}

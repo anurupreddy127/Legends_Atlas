@@ -242,7 +242,7 @@ function App() {
 
   return (
     <div className="font-playfair">
-      <LoadScript googleMapsApiKey="AIzaSyBwAKbzz7h3cL9Aq35v-2PFIuEDaF49F1o">
+      <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
         <RamayanaMap
           center={center}
           locations={locations}
@@ -258,7 +258,6 @@ function App() {
           movingMarkerPosition={movingMarkerPosition}
           activeChapterIndex={selectedIndex}
         />
-
         <ChapterViewer
           chapters={locations}
           onSelect={(chapter, index) => {
@@ -282,7 +281,6 @@ function App() {
           }}
           selectedIndex={locations.indexOf(selectedChapter)}
         />
-
         {showSubstoryCard && substories[activeSubIndex] && (
           <SubstoryCard
             chapterTitle={selectedChapter?.title}
