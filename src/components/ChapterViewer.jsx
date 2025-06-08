@@ -16,7 +16,6 @@ function ChapterViewer({ chapters, onSelect, selectedIndex }) {
       <h3 className="mb-4 font-bold text-xl text-gray-800">
         {" "}
         {/* Larger font for prominence, bold, gray text */}
-        📜 Ramayana Chapters
       </h3>
       <ul className="list-none p-0 m-0">
         {chapters.map((chapter, index) => (

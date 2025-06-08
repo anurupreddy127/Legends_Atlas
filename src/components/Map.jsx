@@ -7,7 +7,7 @@ const containerStyle = {
   minHeight: "500px",
 };
 
-const RamayanaMap = ({
+const Map = ({
   center,
   locations,
   directions,
@@ -72,4 +72,4 @@ const RamayanaMap = ({
   );
 };
 
-export default RamayanaMap;
+export default Map;

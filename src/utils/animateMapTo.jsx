@@ -28,7 +28,7 @@ export function animateMapTo(map, targetCenter, targetZoom, duration = 1000) {
   requestAnimationFrame(animate);
 }
 
-export function animateMarkerAlongPath(marker, path, speed = 10) {
+export function animateMarkerAlongPath(marker, path, speed = 5) {
   if (!marker || !path || path.length < 2) return;
 
   let index = 0;

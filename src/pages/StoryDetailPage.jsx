@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import RamayanaMap from "../components/Map"; // Adjust the import path as necessary
+import Map from "../components/Map"; // Adjust the import path as necessary
 import { LoadScript } from "@react-google-maps/api";
 import { useNavigate } from "react-router-dom";
 
@@ -58,7 +58,7 @@ const StoryDetailPage = () => {
       {/* Fullscreen Map (absolute) */}
       <div className="absolute inset-0 z-0">
         <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-          <RamayanaMap
+          <Map
             center={center}
             locations={[]}
             directions={null}

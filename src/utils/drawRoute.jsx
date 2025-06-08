@@ -1,6 +1,26 @@
+/* eslint-disable no-unused-vars */
 // utils/drawRoute.js
+import { animateSeaRoute } from "./animateSeaRoute";
 
-export function drawRoute({ origin, destination, mapRef, onDone }) {
+export function drawRoute({
+  origin,
+  destination,
+  mapRef,
+  onDone,
+  pathType = "road",
+}) {
+  if (!mapRef?.current || !origin || !destination) {
+    console.error("❌ Missing mapRef or coordinates for drawRoute");
+    onDone?.([]);
+    return;
+  }
+
+  if (pathType === "water") {
+    animateSeaRoute({ origin, destination, mapRef, onDone });
+    return;
+  }
+
+  // 🛣️ Default: road (Google API)
   const directionsService = new window.google.maps.DirectionsService();
 
   directionsService.route(
