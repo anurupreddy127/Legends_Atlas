@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-// utils/drawRoute.js
 import { animateSeaRoute } from "./animateSeaRoute";
 
 export function drawRoute({
@@ -8,6 +6,7 @@ export function drawRoute({
   mapRef,
   onDone,
   pathType = "road",
+  midpoints = [],
 }) {
   if (!mapRef?.current || !origin || !destination) {
     console.error("❌ Missing mapRef or coordinates for drawRoute");
@@ -16,7 +15,7 @@ export function drawRoute({
   }
 
   if (pathType === "water") {
-    animateSeaRoute({ origin, destination, mapRef, onDone });
+    animateSeaRoute({ origin, destination, midpoints, mapRef, onDone });
     return;
   }
 

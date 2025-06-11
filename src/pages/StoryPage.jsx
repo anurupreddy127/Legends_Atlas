@@ -11,6 +11,8 @@ import { drawRoute } from "../utils/drawRoute";
 import SubstoryCard from "../components/SubstoryCard";
 import { useParams } from "react-router-dom";
 
+const libraries = ["geometry"];
+
 function App() {
   const [locations, setLocations] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -27,6 +29,7 @@ function App() {
   const [showSubstoryCard, setShowSubstoryCard] = useState(true);
   const [center, setCenter] = useState({ lat: 20.5937, lng: 78.9629 });
   const { storyId } = useParams();
+  const [story, setStory] = useState(null);
 
   useEffect(() => {
     async function fetchStoryMetaAndChapters() {
@@ -34,13 +37,14 @@ function App() {
         const storyRef = doc(db, "stories", storyId);
         const storySnap = await getDoc(storyRef);
         const storyData = storySnap.data();
+        setStory(storyData);
         if (storyData?.lat && storyData?.lng) {
           setCenter({ lat: Number(storyData.lat), lng: Number(storyData.lng) });
         }
         const chaptersRef = collection(storyRef, "chapters");
         const snapshot = await getDocs(chaptersRef);
         const chapterList = snapshot.docs
-          .map((doc) => doc.data())
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
           .sort((a, b) => a.order - b.order);
         setLocations(chapterList);
       } catch (err) {
@@ -73,7 +77,7 @@ function App() {
         );
         const snapshot = await getDocs(subRef);
         const data = snapshot.docs
-          .map((doc) => doc.data())
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
           .sort((a, b) => a.order - b.order);
         setSubstories(data);
         setActiveSubIndex(0);
@@ -135,6 +139,7 @@ function App() {
         destination: { lat: destLat, lng: destLng },
         mapRef,
         pathType: activeSub.path || "road",
+        midpoints: activeSub.midpoints || [],
         onDone: (path) => {
           const marker = new window.google.maps.Marker({
             map: mapRef.current,
@@ -171,7 +176,7 @@ function App() {
     <div className="font-playfair">
       <LoadScript
         googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-        libraries={["geometry"]}
+        libraries={libraries}
       >
         <Map
           center={center}
@@ -183,12 +188,14 @@ function App() {
           showDestinationMarker={showDestinationMarker}
           onMapLoad={(map) => {
             mapRef.current = map;
+            window.google.maps.event.trigger(map, "resize");
           }}
           movingMarkerPosition={movingMarkerPosition}
           activeChapterIndex={selectedIndex}
         />
         <ChapterViewer
           chapters={locations}
+          storyTitle={story?.title}
           onSelect={(chapter, index) => {
             setSelectedChapter(chapter);
             setSelectedIndex(index);
@@ -206,6 +213,9 @@ function App() {
                 },
                 9
               );
+              setTimeout(() => {
+                window.google.maps.event.trigger(mapRef.current, "resize");
+              }, 300);
             }
           }}
           selectedIndex={locations.indexOf(selectedChapter)}
@@ -238,7 +248,7 @@ function App() {
                   )
                 );
                 const nextSubstories = snapshot.docs
-                  .map((doc) => doc.data())
+                  .map((doc) => ({ id: doc.id, ...doc.data() }))
                   .sort((a, b) => a.order - b.order);
                 const firstNextSub = nextSubstories.find((s) => s.lat && s.lng);
                 const pathType = firstNextSub?.path || "road";
@@ -256,6 +266,7 @@ function App() {
                     },
                     mapRef,
                     pathType,
+                    midpoints: firstNextSub.midpoints || [],
                     onDone: (path) => {
                       const marker = new window.google.maps.Marker({
                         map: mapRef.current,
@@ -276,11 +287,23 @@ function App() {
                         marker.setMap(null);
                         animationInProgressRef.current = false;
                         setShowDestinationMarker(true);
-                        setSelectedChapter(nextChapter);
-                        setSelectedIndex(nextChapterIndex);
-                        setSubstories(nextSubstories);
-                        setActiveSubIndex(0);
-                        setShowSubstoryCard(true);
+
+                        // ✅ Delay update slightly to ensure tiles load first
+                        setTimeout(() => {
+                          setSelectedChapter(nextChapter);
+                          setSelectedIndex(nextChapterIndex);
+                          setSubstories(nextSubstories);
+                          setActiveSubIndex(0);
+                          setShowSubstoryCard(true);
+
+                          // Optional: trigger resize after setting new chapter
+                          setTimeout(() => {
+                            window.google.maps.event.trigger(
+                              mapRef.current,
+                              "resize"
+                            );
+                          }, 200);
+                        }, 300); // ⏳ This delay helps prevent partial gray maps
                       }, path.length * 20 + 100);
                     },
                   });
@@ -296,13 +319,35 @@ function App() {
                 setSubstories([]);
                 setActiveSubIndex(0);
                 setShowSubstoryCard(false);
-                animateMapTo(mapRef.current, { lat: 20.5937, lng: 78.9629 }, 5);
+
+                // 📦 Use bounds to zoom properly and force refresh
+                const indiaCenter = new window.google.maps.LatLng(
+                  20.5937,
+                  78.9629
+                );
+                const bounds = new window.google.maps.LatLngBounds();
+                bounds.extend(indiaCenter); // Expand around center
+
+                // Add buffer points to create a wider region
+                bounds.extend(new window.google.maps.LatLng(8, 70)); // SW corner
+                bounds.extend(new window.google.maps.LatLng(32, 88)); // NE corner
+
+                mapRef.current?.fitBounds(bounds, {
+                  maxZoom: 6,
+                  padding: { top: 50, bottom: 50, left: 50, right: 400 },
+                });
+
+                // 🔁 Force resize after slight delay to trigger full tile load
+                setTimeout(() => {
+                  window.google.maps.event.trigger(mapRef.current, "resize");
+                }, 300);
               }
             }}
             onPrev={() => setActiveSubIndex((prev) => Math.max(prev - 1, 0))}
             isFirst={activeSubIndex === 0}
             isLast={activeSubIndex === substories.length - 1}
             isFinalChapter={selectedIndex === locations.length - 1}
+            isAnimating={animationInProgressRef.current}
           />
         )}
       </LoadScript>

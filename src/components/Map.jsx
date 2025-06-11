@@ -1,12 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { GoogleMap, Marker } from "@react-google-maps/api";
 
-const containerStyle = {
-  width: "100%",
-  height: "100vh",
-  minHeight: "500px",
-};
-
 const Map = ({
   center,
   locations,
@@ -20,12 +14,18 @@ const Map = ({
 }) => {
   return (
     <GoogleMap
-      mapContainerStyle={containerStyle}
+      mapContainerClassName="w-full h-screen min-h-[500px]"
+      gestureHandling="greedy"
       center={center}
       zoom={5}
-      onLoad={onMapLoad}
+      mapTypeId="terrain"
+      disableDefaultUI={false}
+      onLoad={(map) => {
+        onMapLoad(map);
+        window.google.maps.event.trigger(map, "resize");
+      }}
     >
-      {/* 📍 Chapter markers - (these typically don't need high zIndex unless they overlap high zIndex elements) */}
+      {/* 📍 Chapter marker (only for selected chapter when no substories visible) */}
       {!substories.length &&
         locations.map((loc, index) =>
           index === activeChapterIndex ? (
@@ -37,8 +37,7 @@ const Map = ({
           ) : null
         )}
 
-      {/* 🧍 Rama's moving marker (animated) */}
-      {/* This marker's zIndex was already set in App.jsx where it's created as a Google Maps object. */}
+      {/* 🚀 Moving marker (controlled via animation) */}
       {movingMarkerPosition && (
         <Marker
           position={movingMarkerPosition}
@@ -47,11 +46,10 @@ const Map = ({
             scale: 5,
             strokeColor: "blue",
           }}
-          // The zIndex for this specific marker is set on the actual google.maps.Marker object in App.jsx
         />
       )}
 
-      {/* 🔵 Active substory marker (the endpoint marker) */}
+      {/* 📌 Active substory marker (destination point) */}
       {(() => {
         const activeSub = substories[activeSubIndex];
         if (activeSub?.lat && activeSub?.lng && showDestinationMarker) {
@@ -60,9 +58,8 @@ const Map = ({
               position={{ lat: activeSub.lat, lng: activeSub.lng }}
               title={activeSub.title}
               icon={{
-                url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png", // A standard blue dot icon
+                url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
               }}
-              // zIndex={1001} // <--- ADDED THIS LINE: Sets z-index for the static endpoint marker
             />
           );
         }
