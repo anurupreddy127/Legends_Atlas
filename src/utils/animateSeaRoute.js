@@ -26,7 +26,7 @@ export function animateSeaRoute({
     map,
     position: fullPath[0],
     icon: {
-      url: "/src/assets/boat.svg", // ✅ use relative path if inside public/
+      url: "/src/assets/boat.svg",
       scaledSize: new window.google.maps.Size(60, 60), // adjust size as needed
       anchor: new window.google.maps.Point(20, 20), // optional, centers the icon
     },
