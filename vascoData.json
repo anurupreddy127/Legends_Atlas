@@ -1,0 +1,149 @@
+[
+  {
+    "chapterId": "chapter1",
+    "title": "Setting Sail from Lisbon",
+    "order": 1,
+    "lat": 20,
+    "lng": -15,
+    "substories": [
+      {
+        "title": "Departure from Lisbon",
+        "description": "On July 8, 1497, Vasco da Gama set sail from Lisbon with four ships, interpreters, and stone pillars called padrões to mark discovery. It marked the beginning of a bold voyage into the unknown.",
+        "lat": 38.7169,
+        "lng": -9.1399,
+        "order": 1,
+        "path": "water"
+      },
+      {
+        "title": "Passing the Canary Islands",
+        "description": "By July 15, 1497, the fleet passed the Canary Islands, catching the Atlantic winds as they journeyed southward into uncharted waters.",
+        "lat": 28.2936,
+        "lng": -16.6214,
+        "order": 2,
+        "path": "water"
+      },
+      {
+        "title": "Reaching Cape Verde",
+        "description": "On July 26, 1497, the fleet reached São Tiago in Cape Verde. They stayed until August 3, restocking supplies and preparing for the long voyage ahead.",
+        "lat": 15.1111,
+        "lng": -23.6167,
+        "order": 3,
+        "path": "water"
+      },
+      {
+        "title": "South Atlantic Detour",
+        "description": "In August 1497, da Gama led the fleet deep into the South Atlantic to avoid the Gulf of Guinea’s currents, sailing through vast open seas until early November.",
+        "lat": 0.0,
+        "lng": -20.0,
+        "order": 4,
+        "path": "water"
+      }
+    ]
+  },
+  {
+    "chapterId": "chapter2",
+    "title": "Around the Cape",
+    "order": 2,
+    "lat": -30,
+    "lng": 25,
+    "substories": [
+      {
+        "title": "Santa Helena Bay",
+        "description": "On November 7, 1497, the fleet finally spotted land again at Santa Helena Bay in South Africa after months at sea.",
+        "lat": -32.7706,
+        "lng": 18.0794,
+        "order": 1,
+        "path": "water"
+      },
+      {
+        "title": "Rounding the Cape",
+        "description": "On November 22, 1497, the fleet rounded the stormy Cape of Good Hope, battling powerful winds and currents to continue eastward.",
+        "lat": -34.3568,
+        "lng": 18.474,
+        "order": 2,
+        "path": "water"
+      },
+      {
+        "title": "Anchoring at Mossel Bay",
+        "description": "Three days later, on November 25, 1497, the fleet anchored at Mossel Bay, where they erected a padrão and dismantled the storeship.",
+        "lat": -34.1831,
+        "lng": 22.1451,
+        "order": 3,
+        "path": "water"
+      },
+      {
+        "title": "The Natal Coast",
+        "description": "On December 25, 1497, da Gama reached the southeastern African coast and named it 'Natal' in honor of Christmas Day.",
+        "lat": -29.8587,
+        "lng": 31.0218,
+        "order": 4,
+        "path": "water"
+      },
+      {
+        "title": "Rest at Rio do Cobre",
+        "description": "On January 11, 1498, the fleet stopped near a small river they named Rio do Cobre, resting for five days along the southeastern coast of Africa.",
+        "lat": -24.0,
+        "lng": 34.0,
+        "order": 5,
+        "path": "water"
+      },
+      {
+        "title": "River of Good Omens",
+        "description": "By January 25, 1498, the fleet reached the Quelimane River, which they called the River of Good Omens, and stayed for nearly a month while recovering from scurvy.",
+        "lat": -17.85,
+        "lng": 36.8667,
+        "order": 6,
+        "path": "water"
+      }
+    ]
+  },
+  {
+    "chapterId": "chapter3",
+    "title": "Toward India",
+    "order": 3,
+    "lat": -5,
+    "lng": 55,
+    "substories": [
+      {
+        "title": "The Island of Mozambique",
+        "description": "On March 2, 1498, the fleet arrived at the Island of Mozambique, where locals mistook the Portuguese for Muslims and da Gama secured pilots for the next leg of the journey.",
+        "lat": -15.0392,
+        "lng": 40.6822,
+        "order": 1,
+        "path": "water"
+      },
+      {
+        "title": "Arrival at Mombasa",
+        "description": "On April 7, 1498, the fleet reached the port of Mombasa, but the city was hostile, and da Gama stayed only briefly before moving on.",
+        "lat": -4.0435,
+        "lng": 39.6682,
+        "order": 2,
+        "path": "water"
+      },
+      {
+        "title": "A Pilot from Malindi",
+        "description": "On April 14, 1498, da Gama arrived at Malindi, where he secured a skilled Gujarati pilot who knew the sea route to India.",
+        "lat": -3.2192,
+        "lng": 40.1169,
+        "order": 3,
+        "path": "water"
+      },
+      {
+        "title": "Crossing the Indian Ocean",
+        "description": "With their new pilot, the fleet began a 23-day journey across the Indian Ocean on April 25, 1498, heading into unfamiliar and challenging waters.",
+        "lat": 0.0,
+        "lng": 60.0,
+        "order": 4,
+        "path": "water"
+      },
+      {
+        "title": "Arrival at Calicut",
+        "description": "On May 20, 1498, da Gama finally reached Calicut on the Indian coast. Though a padrão was erected to mark the achievement, the diplomatic mission faced failure due to misunderstandings and weak gifts.",
+        "lat": 11.2588,
+        "lng": 75.7804,
+        "order": 5,
+        "path": "water"
+      }
+    ]
+  }
+]
