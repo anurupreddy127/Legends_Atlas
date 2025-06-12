@@ -1,8 +1,6 @@
 import { animateSeaRoute } from "./animateSeaRoute";
 import { animateFlightPath } from "./animateFlightPath";
 
-const flightRedMarkerRef = { current: null };
-
 export function drawRoute({
   origin,
   destination,
@@ -29,7 +27,6 @@ export function drawRoute({
       midpoints,
       mapRef,
       onDone,
-      markerRef: flightRedMarkerRef, // Use the red marker for flight paths
     });
     return;
   }

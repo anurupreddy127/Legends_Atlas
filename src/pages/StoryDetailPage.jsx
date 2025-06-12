@@ -16,7 +16,6 @@ const StoryDetailPage = () => {
 
   useEffect(() => {
     if (!id) return;
-    console.log("ID from useParams:", id);
 
     const fetchStoryDetails = async () => {
       try {
@@ -25,7 +24,6 @@ const StoryDetailPage = () => {
 
         if (storyDoc.exists()) {
           const storyData = storyDoc.data();
-          console.log("✅ Fetched Story:", storyData);
           setStory(storyData);
           setCenter({ lat: storyData.lat, lng: storyData.lng });
 
@@ -49,7 +47,6 @@ const StoryDetailPage = () => {
   }, [id]);
 
   if (!story) {
-    console.log("⏳ Waiting for story data...");
     return (
       <div
         style={{

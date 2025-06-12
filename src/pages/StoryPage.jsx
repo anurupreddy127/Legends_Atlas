@@ -135,6 +135,8 @@ function Story() {
       animationInProgressRef.current = true;
       setShowDestinationMarker(false);
       setShowSubstoryCard(false);
+      const pathType = activeSub.path || "road";
+
       drawRoute({
         origin: { lat: originLat, lng: originLng },
         destination: { lat: destLat, lng: destLng },

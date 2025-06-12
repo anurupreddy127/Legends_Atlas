@@ -1,10 +1,8 @@
-/* eslint-disable no-unused-vars */
 import { GoogleMap, Marker } from "@react-google-maps/api";
 
 const Map = ({
   center,
   locations,
-  directions,
   substories,
   activeSubIndex,
   onMapLoad,
@@ -58,7 +56,7 @@ const Map = ({
               position={{ lat: activeSub.lat, lng: activeSub.lng }}
               title={activeSub.title}
               icon={{
-                url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
               }}
             />
           );
