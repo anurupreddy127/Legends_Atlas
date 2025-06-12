@@ -1,4 +1,7 @@
 import { animateSeaRoute } from "./animateSeaRoute";
+import { animateFlightPath } from "./animateFlightPath";
+
+const flightRedMarkerRef = { current: null };
 
 export function drawRoute({
   origin,
@@ -16,6 +19,18 @@ export function drawRoute({
 
   if (pathType === "water") {
     animateSeaRoute({ origin, destination, midpoints, mapRef, onDone });
+    return;
+  }
+
+  if (pathType === "flight") {
+    animateFlightPath({
+      origin,
+      destination,
+      midpoints,
+      mapRef,
+      onDone,
+      markerRef: flightRedMarkerRef, // Use the red marker for flight paths
+    });
     return;
   }
 

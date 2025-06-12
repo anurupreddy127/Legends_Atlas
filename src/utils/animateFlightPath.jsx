@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-export function animateSeaRoute({
+export function animateFlightPath({
   origin,
   destination,
   mapRef,
@@ -25,9 +25,9 @@ export function animateSeaRoute({
     map,
     position: fullPath[0],
     icon: {
-      url: "/src/assets/boat.svg",
-      scaledSize: new window.google.maps.Size(60, 60), // adjust size as needed
-      anchor: new window.google.maps.Point(20, 20), // optional, centers the icon
+      path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 5,
+      strokeColor: "blue",
     },
     zIndex: 1002,
   });
@@ -94,15 +94,3 @@ export function animateSeaRoute({
     animateSegment();
   }, 300);
 }
-
-// 🔹 Create the animated blue marker
-// const marker = new window.google.maps.Marker({
-//   map,
-//   position: fullPath[0],
-//   icon: {
-//     url: "/src/assets/boat.svg",
-//     scaledSize: new window.google.maps.Size(60, 60), // adjust size as needed
-//     anchor: new window.google.maps.Point(20, 20), // optional, centers the icon
-//   },
-//   zIndex: 1002,
-// });
