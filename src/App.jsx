@@ -1,24 +1,27 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { LoadScript } from "@react-google-maps/api";
 import HomePage from "./pages/HomePage";
 import StoryPage from "./pages/StoryPage";
 import StoryDetailPage from "./pages/StoryDetailPage";
-import AOS from "aos";
-import "aos/dist/aos.css";
 import NotFound from "./pages/NotFound";
 
-AOS.init();
+const LIBRARIES = ["geometry"]; // Add more like "places" if needed
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/story/:id" element={<StoryDetailPage />} />
-        <Route path="/story/:storyId/play" element={<StoryPage />} />
-        <Route path="*" element={<NotFound />} /> {/* ✅ Catch-all route */}
-      </Routes>
-    </Router>
+    <LoadScript
+      googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+      libraries={LIBRARIES}
+    >
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/story/:id" element={<StoryDetailPage />} />
+          <Route path="/story/:storyId/play" element={<StoryPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </LoadScript>
   );
 }
 

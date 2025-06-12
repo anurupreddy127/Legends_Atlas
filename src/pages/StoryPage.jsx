@@ -10,10 +10,11 @@ import Map from "../components/Map";
 import { drawRoute } from "../utils/drawRoute";
 import SubstoryCard from "../components/SubstoryCard";
 import { useParams } from "react-router-dom";
+import Loader from "../components/Loader";
 
 const libraries = ["geometry"];
 
-function App() {
+function Story() {
   const [locations, setLocations] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedChapter, setSelectedChapter] = useState(null);
@@ -174,185 +175,180 @@ function App() {
 
   return (
     <div className="font-playfair">
-      <LoadScript
-        googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-        libraries={libraries}
-      >
-        <Map
-          center={center}
-          locations={locations}
-          directions={directions}
-          substories={substories}
-          activeSubIndex={activeSubIndex}
-          routeAnimationInProgress={routeAnimationInProgress}
-          showDestinationMarker={showDestinationMarker}
-          onMapLoad={(map) => {
-            mapRef.current = map;
-            window.google.maps.event.trigger(map, "resize");
-          }}
-          movingMarkerPosition={movingMarkerPosition}
-          activeChapterIndex={selectedIndex}
-        />
-        <ChapterViewer
-          chapters={locations}
-          storyTitle={story?.title}
-          onSelect={(chapter, index) => {
-            setSelectedChapter(chapter);
-            setSelectedIndex(index);
-            if (
-              mapRef.current &&
-              substories.length > 0 &&
-              substories[0].lat &&
-              substories[0].lng
-            ) {
-              animateMapTo(
-                mapRef.current,
-                {
-                  lat: Number(substories[0].lat),
-                  lng: Number(substories[0].lng),
-                },
-                9
+      <Map
+        center={center}
+        locations={locations}
+        directions={directions}
+        substories={substories}
+        activeSubIndex={activeSubIndex}
+        routeAnimationInProgress={routeAnimationInProgress}
+        showDestinationMarker={showDestinationMarker}
+        onMapLoad={(map) => {
+          mapRef.current = map;
+          window.google.maps.event.trigger(map, "resize");
+        }}
+        movingMarkerPosition={movingMarkerPosition}
+        activeChapterIndex={selectedIndex}
+      />
+      <ChapterViewer
+        chapters={locations}
+        storyTitle={story?.title}
+        onSelect={(chapter, index) => {
+          setSelectedChapter(chapter);
+          setSelectedIndex(index);
+          if (
+            mapRef.current &&
+            substories.length > 0 &&
+            substories[0].lat &&
+            substories[0].lng
+          ) {
+            animateMapTo(
+              mapRef.current,
+              {
+                lat: Number(substories[0].lat),
+                lng: Number(substories[0].lng),
+              },
+              9
+            );
+            setTimeout(() => {
+              window.google.maps.event.trigger(mapRef.current, "resize");
+            }, 300);
+          }
+        }}
+        selectedIndex={locations.indexOf(selectedChapter)}
+      />
+      {showSubstoryCard && substories[activeSubIndex] && (
+        <SubstoryCard
+          chapterTitle={selectedChapter?.title}
+          sub={substories[activeSubIndex]}
+          onNext={async () => {
+            const isLastSubstory = activeSubIndex === substories.length - 1;
+            const isNotFinalChapter = selectedIndex < locations.length - 1;
+            const lastKnownSub = [...substories]
+              .reverse()
+              .find((s) => s.lat && s.lng);
+            if (!isLastSubstory) {
+              setActiveSubIndex((prev) => prev + 1);
+              return;
+            }
+            if (isNotFinalChapter) {
+              const nextChapterIndex = selectedIndex + 1;
+              const nextChapter = locations[nextChapterIndex];
+              const chapterId =
+                nextChapter.id ||
+                nextChapter.chapterId ||
+                `chapter${nextChapterIndex + 1}`;
+              const snapshot = await getDocs(
+                collection(
+                  doc(db, "stories", storyId, "chapters", chapterId),
+                  "substories"
+                )
               );
+              const nextSubstories = snapshot.docs
+                .map((doc) => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => a.order - b.order);
+              const firstNextSub = nextSubstories.find((s) => s.lat && s.lng);
+              const pathType = firstNextSub?.path || "road";
+              if (lastKnownSub && firstNextSub) {
+                animationInProgressRef.current = true;
+                setShowSubstoryCard(false);
+                drawRoute({
+                  origin: {
+                    lat: Number(lastKnownSub.lat),
+                    lng: Number(lastKnownSub.lng),
+                  },
+                  destination: {
+                    lat: Number(firstNextSub.lat),
+                    lng: Number(firstNextSub.lng),
+                  },
+                  mapRef,
+                  pathType,
+                  midpoints: firstNextSub.midpoints || [],
+                  onDone: (path) => {
+                    const marker = new window.google.maps.Marker({
+                      map: mapRef.current,
+                      position: path[0],
+                      icon: {
+                        path: window.google.maps.SymbolPath
+                          .FORWARD_CLOSED_ARROW,
+                        scale: 5,
+                        strokeColor: "blue",
+                      },
+                    });
+                    import("../utils/animateMapTo").then(
+                      ({ animateMarkerAlongPath }) => {
+                        animateMarkerAlongPath(marker, path, 20);
+                      }
+                    );
+                    setTimeout(() => {
+                      marker.setMap(null);
+                      animationInProgressRef.current = false;
+                      setShowDestinationMarker(true);
+
+                      // ✅ Delay update slightly to ensure tiles load first
+                      setTimeout(() => {
+                        setSelectedChapter(nextChapter);
+                        setSelectedIndex(nextChapterIndex);
+                        setSubstories(nextSubstories);
+                        setActiveSubIndex(0);
+                        setShowSubstoryCard(true);
+
+                        // Optional: trigger resize after setting new chapter
+                        setTimeout(() => {
+                          window.google.maps.event.trigger(
+                            mapRef.current,
+                            "resize"
+                          );
+                        }, 200);
+                      }, 300); // ⏳ This delay helps prevent partial gray maps
+                    }, path.length * 20 + 100);
+                  },
+                });
+              } else {
+                setSelectedChapter(nextChapter);
+                setSelectedIndex(nextChapterIndex);
+                setSubstories(nextSubstories);
+                setActiveSubIndex(0);
+              }
+            } else {
+              setSelectedChapter(null);
+              setSelectedIndex(null);
+              setSubstories([]);
+              setActiveSubIndex(0);
+              setShowSubstoryCard(false);
+
+              // 📦 Use bounds to zoom properly and force refresh
+              const indiaCenter = new window.google.maps.LatLng(
+                20.5937,
+                78.9629
+              );
+              const bounds = new window.google.maps.LatLngBounds();
+              bounds.extend(indiaCenter); // Expand around center
+
+              // Add buffer points to create a wider region
+              bounds.extend(new window.google.maps.LatLng(8, 70)); // SW corner
+              bounds.extend(new window.google.maps.LatLng(32, 88)); // NE corner
+
+              mapRef.current?.fitBounds(bounds, {
+                maxZoom: 6,
+                padding: { top: 50, bottom: 50, left: 50, right: 400 },
+              });
+
+              // 🔁 Force resize after slight delay to trigger full tile load
               setTimeout(() => {
                 window.google.maps.event.trigger(mapRef.current, "resize");
               }, 300);
             }
           }}
-          selectedIndex={locations.indexOf(selectedChapter)}
+          onPrev={() => setActiveSubIndex((prev) => Math.max(prev - 1, 0))}
+          isFirst={activeSubIndex === 0}
+          isLast={activeSubIndex === substories.length - 1}
+          isFinalChapter={selectedIndex === locations.length - 1}
+          isAnimating={animationInProgressRef.current}
         />
-        {showSubstoryCard && substories[activeSubIndex] && (
-          <SubstoryCard
-            chapterTitle={selectedChapter?.title}
-            sub={substories[activeSubIndex]}
-            onNext={async () => {
-              const isLastSubstory = activeSubIndex === substories.length - 1;
-              const isNotFinalChapter = selectedIndex < locations.length - 1;
-              const lastKnownSub = [...substories]
-                .reverse()
-                .find((s) => s.lat && s.lng);
-              if (!isLastSubstory) {
-                setActiveSubIndex((prev) => prev + 1);
-                return;
-              }
-              if (isNotFinalChapter) {
-                const nextChapterIndex = selectedIndex + 1;
-                const nextChapter = locations[nextChapterIndex];
-                const chapterId =
-                  nextChapter.id ||
-                  nextChapter.chapterId ||
-                  `chapter${nextChapterIndex + 1}`;
-                const snapshot = await getDocs(
-                  collection(
-                    doc(db, "stories", storyId, "chapters", chapterId),
-                    "substories"
-                  )
-                );
-                const nextSubstories = snapshot.docs
-                  .map((doc) => ({ id: doc.id, ...doc.data() }))
-                  .sort((a, b) => a.order - b.order);
-                const firstNextSub = nextSubstories.find((s) => s.lat && s.lng);
-                const pathType = firstNextSub?.path || "road";
-                if (lastKnownSub && firstNextSub) {
-                  animationInProgressRef.current = true;
-                  setShowSubstoryCard(false);
-                  drawRoute({
-                    origin: {
-                      lat: Number(lastKnownSub.lat),
-                      lng: Number(lastKnownSub.lng),
-                    },
-                    destination: {
-                      lat: Number(firstNextSub.lat),
-                      lng: Number(firstNextSub.lng),
-                    },
-                    mapRef,
-                    pathType,
-                    midpoints: firstNextSub.midpoints || [],
-                    onDone: (path) => {
-                      const marker = new window.google.maps.Marker({
-                        map: mapRef.current,
-                        position: path[0],
-                        icon: {
-                          path: window.google.maps.SymbolPath
-                            .FORWARD_CLOSED_ARROW,
-                          scale: 5,
-                          strokeColor: "blue",
-                        },
-                      });
-                      import("../utils/animateMapTo").then(
-                        ({ animateMarkerAlongPath }) => {
-                          animateMarkerAlongPath(marker, path, 20);
-                        }
-                      );
-                      setTimeout(() => {
-                        marker.setMap(null);
-                        animationInProgressRef.current = false;
-                        setShowDestinationMarker(true);
-
-                        // ✅ Delay update slightly to ensure tiles load first
-                        setTimeout(() => {
-                          setSelectedChapter(nextChapter);
-                          setSelectedIndex(nextChapterIndex);
-                          setSubstories(nextSubstories);
-                          setActiveSubIndex(0);
-                          setShowSubstoryCard(true);
-
-                          // Optional: trigger resize after setting new chapter
-                          setTimeout(() => {
-                            window.google.maps.event.trigger(
-                              mapRef.current,
-                              "resize"
-                            );
-                          }, 200);
-                        }, 300); // ⏳ This delay helps prevent partial gray maps
-                      }, path.length * 20 + 100);
-                    },
-                  });
-                } else {
-                  setSelectedChapter(nextChapter);
-                  setSelectedIndex(nextChapterIndex);
-                  setSubstories(nextSubstories);
-                  setActiveSubIndex(0);
-                }
-              } else {
-                setSelectedChapter(null);
-                setSelectedIndex(null);
-                setSubstories([]);
-                setActiveSubIndex(0);
-                setShowSubstoryCard(false);
-
-                // 📦 Use bounds to zoom properly and force refresh
-                const indiaCenter = new window.google.maps.LatLng(
-                  20.5937,
-                  78.9629
-                );
-                const bounds = new window.google.maps.LatLngBounds();
-                bounds.extend(indiaCenter); // Expand around center
-
-                // Add buffer points to create a wider region
-                bounds.extend(new window.google.maps.LatLng(8, 70)); // SW corner
-                bounds.extend(new window.google.maps.LatLng(32, 88)); // NE corner
-
-                mapRef.current?.fitBounds(bounds, {
-                  maxZoom: 6,
-                  padding: { top: 50, bottom: 50, left: 50, right: 400 },
-                });
-
-                // 🔁 Force resize after slight delay to trigger full tile load
-                setTimeout(() => {
-                  window.google.maps.event.trigger(mapRef.current, "resize");
-                }, 300);
-              }
-            }}
-            onPrev={() => setActiveSubIndex((prev) => Math.max(prev - 1, 0))}
-            isFirst={activeSubIndex === 0}
-            isLast={activeSubIndex === substories.length - 1}
-            isFinalChapter={selectedIndex === locations.length - 1}
-            isAnimating={animationInProgressRef.current}
-          />
-        )}
-      </LoadScript>
+      )}
     </div>
   );
 }
 
-export default App;
+export default Story;

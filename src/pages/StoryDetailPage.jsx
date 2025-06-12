@@ -5,6 +5,7 @@ import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import Map from "../components/Map"; // Adjust the import path as necessary
 import { LoadScript } from "@react-google-maps/api";
 import { useNavigate } from "react-router-dom";
+import Loader from "../components/Loader";
 
 const StoryDetailPage = () => {
   const { id } = useParams();
@@ -22,7 +23,6 @@ const StoryDetailPage = () => {
         const storyDocRef = doc(db, "stories", id);
         const storyDoc = await getDoc(storyDocRef);
 
-        console.log("📄 Checking document existence...");
         if (storyDoc.exists()) {
           const storyData = storyDoc.data();
           console.log("✅ Fetched Story:", storyData);
@@ -49,27 +49,36 @@ const StoryDetailPage = () => {
   }, [id]);
 
   if (!story) {
-    console.log("🕐 Waiting for story data...");
-    return <div className="text-center mt-10">Loading...</div>;
+    console.log("⏳ Waiting for story data...");
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Loader />
+      </div>
+    );
   }
 
   return (
     <div className="font-playfair relative h-screen w-full">
       {/* Fullscreen Map (absolute) */}
       <div className="absolute inset-0 z-0">
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-          <Map
-            center={center}
-            locations={[]}
-            directions={null}
-            substories={[]}
-            activeSubIndex={0}
-            onMapLoad={() => {}}
-            showDestinationMarker={false}
-            movingMarkerPosition={null}
-            activeChapterIndex={-1}
-          />
-        </LoadScript>
+        <Map
+          center={center}
+          locations={[]}
+          directions={null}
+          substories={[]}
+          activeSubIndex={0}
+          onMapLoad={() => {}}
+          showDestinationMarker={false}
+          movingMarkerPosition={null}
+          activeChapterIndex={-1}
+        />
       </div>
 
       {/* Overlay: Chapter Card */}
