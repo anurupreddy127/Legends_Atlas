@@ -2,6 +2,10 @@
 
 **Legends Atlas** is an interactive storytelling platform that brings ancient epics like the Ramayana to life through animated, map-based visualizations powered by the **Google Maps API** and **Firebase**.
 
+# Try It Out:
+
+[Legends Atlas](https://ramayana-map.web.app)
+
 ## 🚀 Features
 
 - 🗺️ **Interactive Map-Based Stories**  
